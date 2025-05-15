@@ -6,6 +6,10 @@ import io, base64
 
 app = Flask(__name__)
 
+def get_coin_logo(coin_id):
+    # fonksiyon içeriği
+    pass
+
 app.jinja_env.globals.update(get_coin_logo=get_coin_logo)
 
 favorites = []

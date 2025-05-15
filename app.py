@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -7,6 +7,17 @@ import io, base64
 app = Flask(__name__)
 favorites = []
 alarms = []
+
+# Tüm coin listesi başta alınır
+def get_all_coins():
+    try:
+        url = "https://api.coingecko.com/api/v3/coins/list"
+        response = requests.get(url).json()
+        return sorted(response, key=lambda x: x['name'])  # isme göre sırala
+    except:
+        return []
+
+coin_list = get_all_coins()
 
 def get_price(coin_id, currency):
     try:
@@ -23,6 +34,15 @@ def get_price_history(coin_id, days=7, currency="usd"):
         return data["prices"]
     except:
         return None
+    
+def coin_list():
+    try:
+        url = "https://api.coingecko.com/api/v3/coins/list"
+        res = requests.get(url).json()
+        return sorted(res, key=lambda x: x["name"])  # İsimlere göre sırala
+    except:
+        return []
+
 
 def get_coin_logo(coin_id):
     try:
@@ -65,17 +85,18 @@ def index():
         "chart": None,
         "favorites": favorites,
         "alarm_set": False,
-        "error": None
+        "error": None,
+        "coin_list": coin_list  # Tüm coin'ler dropdown için
     }
 
     if request.method == "POST":
-        coin = request.form["coin"].lower().strip()
+        coin = request.form["coin_id"]
         currency = request.form.get("currency", "usd")
         days = int(request.form.get("days", 7))
         style = request.form.get("chart_style", "line")
 
         if not coin:
-            context["error"] = "Lütfen bir coin adı girin!"
+            context["error"] = "Lütfen bir coin seçin!"
         else:
             price = get_price(coin, currency)
             if price is None:
@@ -87,6 +108,8 @@ def index():
                 history = get_price_history(coin, days, currency)
                 if history:
                     context["chart"] = create_chart(history, style)
+                else:
+                    context["error"] = "Geçmiş veri bulunamadı."
 
         if "add_fav" in request.form:
             if coin and coin not in favorites:
@@ -100,7 +123,9 @@ def index():
             except:
                 context["error"] = "Alarm fiyatı geçersiz!"
 
-    return render_template("index.html", **context)
+    return render_template("index.html", get_coin_logo=get_coin_logo, coin_list=coin_list(), **context)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

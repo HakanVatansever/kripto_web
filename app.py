@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import requests
-from datetime import datetime
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 import io, base64
 
 app = Flask(__name__)
@@ -9,40 +9,26 @@ app = Flask(__name__)
 favorites = []
 alarms = []
 
-def coin_list():
+def get_binance_price(symbol):
     try:
-        url = "https://api.coingecko.com/api/v3/coins/list"
-        res = requests.get(url).json()
-        return sorted(res, key=lambda x: x["name"])  # İsimlere göre sırala
-    except Exception as e:
-        print("Coin listesi alınamadı:", e)
-        return []
-
-def get_price(coin_id, currency):
-    try:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies={currency}"
-        res = requests.get(url).json()
-        return res[coin_id][currency]
-    except Exception as e:
-        print("Fiyat alınamadı:", e)
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol.upper()}"
+        res = requests.get(url)
+        res.raise_for_status()
+        return float(res.json()['price'])
+    except:
         return None
 
-def get_price_history(coin_id, days=7, currency="usd"):
+def get_binance_history(symbol, days=7):
     try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency={currency}&days={days}"
-        data = requests.get(url).json()
-        return data["prices"]
-    except Exception as e:
-        print("Geçmiş veri alınamadı:", e)
-        return None
-
-def get_coin_logo(coin_id):
-    try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}"
-        res = requests.get(url).json()
-        return res["image"]["large"]
-    except Exception as e:
-        print("Logo alınamadı:", e)
+        interval = "1d"
+        limit = days
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval={interval}&limit={limit}"
+        res = requests.get(url)
+        res.raise_for_status()
+        data = res.json()
+        prices = [[int(item[0]), float(item[4])] for item in data]  # close price
+        return prices
+    except:
         return None
 
 def create_chart(prices, style="line"):
@@ -69,66 +55,49 @@ def create_chart(prices, style="line"):
     plt.close()
     return base64.b64encode(img.read()).decode("utf-8")
 
-# Jinja'da fonksiyonu kullanılabilir yapmak için
-app.jinja_env.globals.update(get_coin_logo=get_coin_logo)
-
 @app.route("/", methods=["GET", "POST"])
 def index():
-    all_coins = coin_list()  # Coin listesini sayfa her açıldığında çekiyoruz (dilersen bunu globalde cache'leyebilirsin)
-
     context = {
-        "coin": None,
+        "symbol": None,
         "price": None,
-        "logo_url": None,
         "chart": None,
         "favorites": favorites,
         "alarm_set": False,
-        "error": None,
-        "coin_list": all_coins
+        "error": None
     }
 
     if request.method == "POST":
-        coin = request.form.get("coin_id", "").strip()
-        currency = request.form.get("currency", "usd")
-        days_raw = request.form.get("days", "7")
+        symbol = request.form.get("coin_symbol", "").upper()
+        days = int(request.form.get("days", 7))
         style = request.form.get("chart_style", "line")
 
-        # days için güvenli dönüşüm
-        try:
-            days = int(days_raw)
-            if days < 1:
-                days = 7
-        except ValueError:
-            days = 7
-
-        if not coin:
-            context["error"] = "Lütfen bir coin seçin!"
+        if not symbol:
+            context["error"] = "Lütfen bir coin sembolü girin (örneğin: BTCUSDT)!"
         else:
-            price = get_price(coin, currency)
+            price = get_binance_price(symbol)
             if price is None:
-                context["error"] = "Fiyat verisi alınamadı."
+                context["error"] = "Fiyat verisi alınamadı. Sembol doğru mu?"
             else:
-                context["coin"] = coin
+                context["symbol"] = symbol
                 context["price"] = price
-                context["logo_url"] = get_coin_logo(coin)
-                history = get_price_history(coin, days, currency)
+                history = get_binance_history(symbol, days)
                 if history:
                     context["chart"] = create_chart(history, style)
                 else:
                     context["error"] = "Geçmiş veri bulunamadı."
 
-        if "add_fav" in request.form and coin and coin not in favorites:
-            favorites.append(coin)
+        if "add_fav" in request.form and symbol and symbol not in favorites:
+            favorites.append(symbol)
 
         if "set_alarm" in request.form:
             try:
                 target = float(request.form["alarm_price"])
-                alarms.append({"coin": coin, "target": target, "currency": currency})
+                alarms.append({"coin": symbol, "target": target})
                 context["alarm_set"] = True
             except:
                 context["error"] = "Alarm fiyatı geçersiz!"
 
-    return render_template("index.html", get_coin_logo=get_coin_logo, **context)
+    return render_template("index.html", **context)
 
 if __name__ == "__main__":
     app.run(debug=True)

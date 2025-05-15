@@ -2,120 +2,83 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Kripto Takip Uygulaması</title>
+    <title>Binance Kripto Takip</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <!-- Tema değiştirme butonu -->
-    <button class="theme-toggle" onclick="toggleTheme()">🌓Tema Değiştir</button>
+<button class="theme-toggle" onclick="toggleTheme()">🌓Tema Değiştir</button>
 
-    <!-- Arka planda dolanan coin simgeleri -->
-    <div class="floating-icons">
-        <img src="https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png" style="left: 5%; animation-delay: 0s;">
-        <img src="https://assets.coingecko.com/coins/images/279/thumb/ethereum.png" style="left: 25%; animation-delay: 5s;">
-        <img src="https://assets.coingecko.com/coins/images/825/thumb/binance-coin-logo.png" style="left: 45%; animation-delay: 2s;">
-        <img src="https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png" style="left: 65%; animation-delay: 4s;">
-        <img src="https://assets.coingecko.com/coins/images/74/thumb/cardano.png" style="left: 85%; animation-delay: 1s;">
-    </div>
+<h1>Binance Kripto Takip Uygulaması</h1>
 
-    <!-- Kayan coin başlığı -->
-    <div class="coin-marquee">
-        <div class="coin-track">
-            {% for fav_coin in favorites %}
-                <div class="coin-item">
-                    <img src="{{ get_coin_logo(fav_coin) }}" alt="{{ fav_coin }}">
-                    {{ fav_coin.upper() }}
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+<form method="post">
+    <label for="coin_symbol">Coin Sembolü (örneğin: BTCUSDT):</label><br>
+    <input type="text" name="coin_symbol" placeholder="BTCUSDT" required><br>
 
-    <h1>Kripto Para Takip Uygulaması</h1>
+    <label for="days">Veri Aralığı:</label><br>
+    <select name="days">
+        <option value="1">1 Gün</option>
+        <option value="7" selected>7 Gün</option>
+        <option value="30">30 Gün</option>
+    </select><br>
 
-    <form method="post">
-        <label for="coin_id">Coin Seçin:</label><br>
-        <select name="coin_id" required>
-            {% for c in coin_list %}
-                <option value="{{ c.id }}" {% if c.id == coin %}selected{% endif %}>{{ c.name }} ({{ c.symbol.upper() }})</option>
-            {% endfor %}
-        </select><br>
+    <label for="chart_style">Grafik Türü:</label><br>
+    <select name="chart_style">
+        <option value="line">Çizgi</option>
+        <option value="bar">Bar</option>
+        <option value="area">Alan</option>
+        <option value="scatter">Nokta</option>
+    </select><br>
 
-        <label for="currency">Para Birimi:</label><br>
-        <select name="currency">
-            <option value="usd" {% if selected_currency == 'usd' %}selected{% endif %}>USD</option>
-            <option value="eur" {% if selected_currency == 'eur' %}selected{% endif %}>EUR</option>
-            <option value="try" {% if selected_currency == 'try' %}selected{% endif %}>TRY</option>
-        </select><br>
+    <button type="submit">Fiyat Göster</button>
+    <button name="add_fav" value="1">Favorilere Ekle</button><br><br>
 
-        <label for="days">Veri Aralığı:</label><br>
-        <select name="days">
-            <option value="1" {% if selected_days == 1 %}selected{% endif %}>1 Gün</option>
-            <option value="7" {% if selected_days == 7 %}selected{% endif %}>7 Gün</option>
-            <option value="30" {% if selected_days == 30 %}selected{% endif %}>30 Gün</option>
-        </select><br>
+    <label for="alarm_price">Alarm Fiyatı:</label>
+    <input type="text" name="alarm_price" placeholder="Örn: 50000">
+    <button name="set_alarm" value="1">Alarm Kur</button>
+</form>
 
-        <label for="chart_style">Grafik Türü:</label><br>
-        <select name="chart_style">
-            <option value="line" {% if selected_style == 'line' %}selected{% endif %}>Çizgi</option>
-            <option value="bar" {% if selected_style == 'bar' %}selected{% endif %}>Bar</option>
-            <option value="area" {% if selected_style == 'area' %}selected{% endif %}>Alan</option>
-            <option value="scatter" {% if selected_style == 'scatter' %}selected{% endif %}>Nokta</option>
-        </select><br><br>
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+{% endif %}
 
-        <button type="submit">Fiyat Göster</button>
-        <button type="submit" name="add_fav" value="1">Favorilere Ekle</button><br><br>
+{% if symbol and price %}
+    <h2>{{ symbol.upper() }} - {{ price }}</h2>
+{% endif %}
 
-        <label for="alarm_price">Alarm Fiyatı:</label>
-        <input type="text" name="alarm_price" placeholder="Örn: 50000">
-        <button type="submit" name="set_alarm" value="1">Alarm Kur</button>
-    </form>
+{% if chart %}
+    <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
+{% endif %}
 
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+{% if favorites %}
+    <h3>Favori Coinler</h3>
+    <ul>
+        {% for fav in favorites %}
+            <li>{{ fav }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
-    {% if coin and price %}
-        <h2>{{ coin.upper() }} - {{ price }} {{ selected_currency.upper() }}</h2>
-        {% if logo_url %}
-            <img src="{{ logo_url }}" alt="{{ coin }}" width="64">
-        {% endif %}
-    {% endif %}
+{% if alarm_set %}
+    <p style="color:green;">Alarm başarıyla kuruldu!</p>
+{% endif %}
 
-    {% if chart %}
-        <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
-    {% endif %}
+<footer>
+    <p>© 2025 Binance Kripto Takip</p>
+</footer>
 
-    {% if favorites %}
-        <h3>Favori Coinler</h3>
-        <ul>
-            {% for fav in favorites %}
-                <li>{{ fav.upper() }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+<script>
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-theme');
+        body.classList.toggle('light-theme');
+        localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+    }
 
-    {% if alarm_set %}
-        <p style="color:green;">Alarm başarıyla kuruldu!</p>
-    {% endif %}
-
-    <footer>
-        <p>© 2025 Kripto Takip Uygulaması</p>
-    </footer>
-
-    <script>
-        function toggleTheme() {
-            const body = document.body;
-            body.classList.toggle('dark-theme');
-            body.classList.toggle('light-theme');
-            localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
-        }
-
-        window.onload = () => {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.body.classList.add(theme + '-theme');
-        };
-    </script>
-
+    window.onload = () => {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.body.classList.add(theme + '-theme');
+    };
+</script>
 </body>
 </html>

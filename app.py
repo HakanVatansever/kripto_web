@@ -130,7 +130,9 @@ def index():
             except:
                 context["error"] = "Alarm fiyatı geçersiz!"
 
-    return render_template("index.html", get_coin_logo=get_coin_logo, coin_list=coin_list(), **context)
+    return render_template("index.html", get_coin_logo=get_coin_logo, **context)
+
+
 
 
 

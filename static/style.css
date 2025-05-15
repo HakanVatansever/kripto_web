@@ -1,68 +1,117 @@
-body {
+<style>
+  body {
     font-family: Arial, sans-serif;
-    background: #f0f4f8;
-    color: #333;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #eee;
     text-align: center;
     padding: 20px;
-}
+    overflow-x: hidden;
+    position: relative; /* z-index çalışması için */
+    min-height: 100vh;
+  }
 
-h1 {
-    color: #2c3e50;
+  h1 {
+    color: #f0c330;
     margin-bottom: 20px;
-}
+    position: relative;
+    z-index: 10;
+  }
 
-form {
-    background: #ffffff;
+  form {
+    background: rgba(255,255,255,0.1);
     padding: 20px;
     border-radius: 12px;
     display: inline-block;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    position: relative;
+    z-index: 10;
+  }
 
-input[type="text"],
-select {
-    padding: 8px;
-    margin: 5px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 180px;
-}
+  /* Kayan coin logosu container - arka plan olarak */
+  .coin-marquee {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 80px;
+    overflow: hidden;
+    pointer-events: none; /* tıklanmaz */
+    z-index: -1;  /* sayfanın arkasında */
+    background: transparent;
+  }
 
-button {
-    padding: 10px 16px;
-    margin: 5px;
-    background-color: #3498db;
-    border: none;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+  .coin-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 30s linear infinite;
+  }
 
-button:hover {
-    background-color: #2980b9;
-}
+  .coin-track.reverse {
+    animation-direction: reverse;
+    animation-duration: 40s;
+  }
 
-ul {
-    list-style: none;
-    padding: 0;
-}
+  .coin-item {
+    flex: 0 0 auto;
+    margin: 0 15px;
+  }
 
-li {
-    background-color: #ecf0f1;
-    margin: 5px auto;
-    padding: 10px;
-    width: 200px;
-    border-radius: 8px;
-}
+  .coin-item img {
+    width: 60px;
+    height: 60px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+    border-radius: 50%;
+  }
 
-img {
-    margin-top: 10px;
-    border-radius: 8px;
-}
+  @keyframes marquee {
+    0%   { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
 
-footer {
-    margin-top: 40px;
-    color: #888;
-    font-size: 14px;
-}
+<body>
+
+<h1>Kripto Para Takip Uygulaması</h1>
+
+<form>
+  <input type="text" placeholder="Bitcoin, Ethereum, ..." />
+  <button type="submit">Ara</button>
+</form>
+
+<div class="coin-marquee" aria-hidden="true">
+  <div class="coin-track" id="track1"></div>
+  <div class="coin-track reverse" id="track2"></div>
+</div>
+
+<script>
+  const coins = [
+    {id: "bitcoin", img: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"},
+    {id: "ethereum", img: "https://assets.coingecko.com/coins/images/279/large/ethereum.png"},
+    {id: "binancecoin", img: "https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png"},
+    {id: "ripple", img: "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png"},
+    {id: "cardano", img: "https://assets.coingecko.com/coins/images/975/large/cardano.png"},
+    {id: "dogecoin", img: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png"},
+    {id: "polkadot", img: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png"},
+  ];
+
+  function createCoinElements(trackId) {
+    const track = document.getElementById(trackId);
+    for(let repeat = 0; repeat < 2; repeat++) {
+      coins.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "coin-item";
+        const img = document.createElement("img");
+        img.src = c.img;
+        img.alt = c.id;
+        div.appendChild(img);
+        track.appendChild(div);
+      });
+    }
+  }
+
+  createCoinElements("track1");
+  createCoinElements("track2");
+</script>
+
+</body>

@@ -1,25 +1,31 @@
+/* Genel gövde ayarları */
 body {
     font-family: Arial, sans-serif;
     background: #f0f4f8;
     color: #333;
     text-align: center;
-    padding: 20px;
+    padding: 80px 20px 20px; /* üstten boşluk artırıldı, kayan bar için */
 }
 
+/* Başlık */
 h1 {
     color: #2c3e50;
     margin-bottom: 20px;
 }
 
+/* Form kutusu */
 form {
     background: #ffffff;
     padding: 20px;
     border-radius: 12px;
     display: inline-block;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
+/* Input ve select alanları */
 input[type="text"],
+input[type="number"],
 select {
     padding: 8px;
     margin: 5px;
@@ -28,6 +34,7 @@ select {
     width: 180px;
 }
 
+/* Buton stili */
 button {
     padding: 10px 16px;
     margin: 5px;
@@ -43,6 +50,7 @@ button:hover {
     background-color: #2980b9;
 }
 
+/* Listeleme */
 ul {
     list-style: none;
     padding: 0;
@@ -52,23 +60,26 @@ li {
     background-color: #ecf0f1;
     margin: 5px auto;
     padding: 10px;
-    width: 200px;
+    width: 220px;
     border-radius: 8px;
 }
 
+/* Coin logosu */
 img {
     margin-top: 10px;
     border-radius: 8px;
 }
 
+/* Footer */
 footer {
     margin-top: 40px;
     color: #888;
     font-size: 14px;
 }
 
-
-/* Arkadaki kayan coin isimleri */
+/* ------------------ */
+/* Kayan coin barı    */
+/* ------------------ */
 
 .coin-marquee {
     position: fixed;
@@ -82,6 +93,7 @@ footer {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    border-bottom: 2px solid #444;
 }
 
 .coin-track {
@@ -117,9 +129,4 @@ footer {
     100% {
         transform: translateX(-100%);
     }
-}
-
-/* Sayfa içeriği alt kısımda biraz boşluk olsun */
-body {
-    padding-top: 70px;
 }

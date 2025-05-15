@@ -4,45 +4,94 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kripto Para Takip</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
-    <!-- Kayan coin isimleri ve resimleri -->
-    <div class="coin-marquee" aria-hidden="true">
-        <div class="coin-track" id="track1"></div>
-        <div class="coin-track reverse" id="track2"></div>
-    </div>
+<!-- Kayan coin isimleri ve resimleri -->
+<div class="coin-marquee" aria-hidden="true">
+    <div class="coin-track" id="track1"></div>
+    <div class="coin-track reverse" id="track2"></div>
+</div>
 
-    <h1>Kripto Para Takip Uygulaması</h1>
+<h1>Kripto Para Takip Uygulaması</h1>
 
-    <form>
-        <input type="text" placeholder="Bitcoin, Ethereum, ..." />
-        <button type="submit">Ara</button>
+<form method="POST">
+    <input type="text" name="coin_name" placeholder="Bitcoin, Ethereum, ..." required>
+    <select name="currency">
+        <option value="usd" {% if currency == 'usd' %}selected{% endif %}>USD</option>
+        <option value="eur" {% if currency == 'eur' %}selected{% endif %}>EUR</option>
+        <option value="try" {% if currency == 'try' %}selected{% endif %}>TRY</option>
+    </select>
+    <input type="number" name="days" value="{{ days or 7 }}" min="1" max="365">
+    <select name="chart_type">
+        <option value="line" {% if chart_type == 'line' %}selected{% endif %}>Çizgi Grafik</option>
+        <option value="bar" {% if chart_type == 'bar' %}selected{% endif %}>Bar Grafik</option>
+        <option value="area" {% if chart_type == 'area' %}selected{% endif %}>Alan Grafik</option>
+    </select>
+    <button type="submit">Ara</button>
+</form>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+{% if coin_name %}
+    <h2>{{ coin_name | capitalize }} - {{ currency.upper() }}</h2>
+    {% if logo_url %}
+        <img src="{{ logo_url }}" alt="{{ coin_name }}" width="64">
+    {% endif %}
+    <p>Güncel Fiyat: {{ current_price }}</p>
+
+    <form method="POST">
+        <input type="hidden" name="coin_name" value="{{ coin_name }}">
+        <input type="hidden" name="currency" value="{{ currency }}">
+        <button name="favorite" value="1">Favorilere Ekle</button>
+        <br><br>
+        <input type="number" name="alarm_price" placeholder="Alarm fiyatı gir" step="0.01">
+        <button name="set_alarm" value="1">Alarm Kur</button>
     </form>
 
-    <!-- Coin listesi ve diğer içerikler buraya eklenebilir -->
+    {% if chart_data %}
+        <img src="data:image/png;base64,{{ chart_data }}" alt="Grafik">
+    {% endif %}
+{% endif %}
 
-    <script>
-      // Örnek coin listesi ve logolar (buraya kendi verini ekleyebilirsin)
-      const coins = [
-        { name: "Bitcoin", symbol: "BTC", img: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png" },
-        { name: "Ethereum", symbol: "ETH", img: "https://assets.coingecko.com/coins/images/279/large/ethereum.png" },
-        { name: "Binance Coin", symbol: "BNB", img: "https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png" },
-        { name: "Cardano", symbol: "ADA", img: "https://assets.coingecko.com/coins/images/975/large/cardano.png" },
-        { name: "Dogecoin", symbol: "DOGE", img: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png" },
-        { name: "Polkadot", symbol: "DOT", img: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png" },
-        { name: "Solana", symbol: "SOL", img: "https://assets.coingecko.com/coins/images/4128/large/solana.png" },
-        { name: "Litecoin", symbol: "LTC", img: "https://assets.coingecko.com/coins/images/2/large/litecoin.png" }
-      ];
+{% if favorites %}
+    <h3>Favori Coinler:</h3>
+    <ul>
+    {% for fav in favorites %}
+        <li>{{ fav }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
 
-      function populateTrack(trackId, reverse=false) {
-        const track = document.getElementById(trackId);
-        track.innerHTML = "";
-        // Tekrar eden coin listesi oluştur (kaydırma için uzun olması gerekir)
-        const repeatCount = 10;
-        for(let i=0; i<repeatCount; i++){
-          coins.forEach(coin => {
+{% if alarms %}
+    <h3>Kurulu Alarmlar:</h3>
+    <ul>
+    {% for alarm in alarms %}
+        <li>{{ alarm.coin }} - {{ alarm.currency.upper() }} {{ alarm.target }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<script>
+const coins = [
+    { name: "Bitcoin", symbol: "BTC", img: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png" },
+    { name: "Ethereum", symbol: "ETH", img: "https://assets.coingecko.com/coins/images/279/large/ethereum.png" },
+    { name: "Binance Coin", symbol: "BNB", img: "https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png" },
+    { name: "Cardano", symbol: "ADA", img: "https://assets.coingecko.com/coins/images/975/large/cardano.png" },
+    { name: "Dogecoin", symbol: "DOGE", img: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png" },
+    { name: "Polkadot", symbol: "DOT", img: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png" },
+    { name: "Solana", symbol: "SOL", img: "https://assets.coingecko.com/coins/images/4128/large/solana.png" },
+    { name: "Litecoin", symbol: "LTC", img: "https://assets.coingecko.com/coins/images/2/large/litecoin.png" }
+];
+
+function populateTrack(trackId) {
+    const track = document.getElementById(trackId);
+    const repeatCount = 10;
+    for (let i = 0; i < repeatCount; i++) {
+        coins.forEach(coin => {
             const coinItem = document.createElement("div");
             coinItem.className = "coin-item";
 
@@ -56,14 +105,13 @@
             coinItem.appendChild(img);
             coinItem.appendChild(span);
             track.appendChild(coinItem);
-          });
-        }
-      }
+        });
+    }
+}
 
-      // Trackleri doldur
-      populateTrack("track1");
-      populateTrack("track2", true);
-    </script>
+populateTrack("track1");
+populateTrack("track2");
+</script>
 
 </body>
 </html>

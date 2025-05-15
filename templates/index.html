@@ -6,25 +6,61 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Kripto Takip</h1>
-    <input id="coin" placeholder="bitcoin">
-    <select id="currency">
-        <option value="usd">$ USD</option>
-        <option value="try">₺ TRY</option>
-        <option value="usdt">₮ USDT</option>
-    </select>
-    <select id="days">
-        <option value="1">1 Gün</option>
-        <option value="7" selected>7 Gün</option>
-        <option value="14">14 Gün</option>
-        <option value="30">30 Gün</option>
-    </select>
-    <button onclick="getCoin()">Göster</button>
-    <h2 id="price"></h2>
-    <img id="logo" src="" alt="" width="64">
-    <canvas id="chart" height="100"></canvas>
+    <h1>Kripto Para Takip</h1>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <form method="POST">
+        <input type="text" name="coin" placeholder="örnek: bitcoin" value="{{ coin or '' }}" required>
+        <select name="currency">
+            <option value="usd">USD</option>
+            <option value="try">TRY</option>
+            <option value="usdt">USDT</option>
+        </select>
+        <select name="days">
+            {% for d in [1, 7, 14, 30] %}
+                <option value="{{ d }}">{{ d }} gün</option>
+            {% endfor %}
+        </select>
+        <select name="chart_style">
+            <option value="line">Çizgi</option>
+            <option value="bar">Çubuk</option>
+            <option value="area">Alan</option>
+            <option value="scatter">Nokta</option>
+        </select>
+        <button type="submit">Göster</button>
+        <button name="add_fav">Favoriye Ekle</button><br><br>
+
+        <input type="text" name="alarm_price" placeholder="Alarm Fiyatı">
+        <button name="set_alarm">Alarm Kur</button>
+    </form>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    {% if coin %}
+        <h2>{{ coin|upper }}: {{ price }}</h2>
+        {% if logo_url %}
+            <img src="{{ logo_url }}" width="64">
+        {% endif %}
+    {% endif %}
+
+    {% if chart %}
+        <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
+    {% endif %}
+
+    <h3>Favoriler</h3>
+    <ul>
+        {% for fav in favorites %}
+            <li>{{ fav|upper }}</li>
+        {% endfor %}
+    </ul>
+
+    {% if alarm_set %}
+        <p style="color:green;">Alarm başarıyla kuruldu.</p>
+    {% endif %}
+
+    <footer>
+        <p>Veri: CoinGecko API</p>
+    </footer>
 </body>
 </html>

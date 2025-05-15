@@ -1,123 +1,65 @@
 body {
     font-family: Arial, sans-serif;
-    background: url('https://assets.coingecko.com/coins/images/1/large/bitcoin.png') no-repeat center center fixed;
-    background-size: cover;
-    color: #333;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #f0f0f0;
     text-align: center;
-    padding: 20px;
-    transition: background 0.5s ease, color 0.5s ease;
-}
-
-body.dark-theme {
-    background: url('https://images.unsplash.com/photo-1607082342304-0aab0efc9989?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-    background-size: cover;
-    color: #eee;
+    padding: 30px 20px;
+    min-height: 100vh;
+    margin: 0;
 }
 
 h1 {
-    color: #2c3e50;
-    margin-bottom: 20px;
-}
-
-body.dark-theme h1 {
-    color: #ddd;
+    margin-bottom: 30px;
+    font-weight: 700;
 }
 
 form {
-    background: #ffffff;
-    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 25px;
     border-radius: 12px;
     display: inline-block;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: background 0.5s ease, color 0.5s ease;
-}
-
-body.dark-theme form {
-    background: #222;
-    color: #eee;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 input[type="text"],
 select {
-    padding: 8px;
-    margin: 5px;
-    border: 1px solid #ccc;
+    padding: 10px 12px;
+    margin: 8px 10px;
+    border: none;
     border-radius: 8px;
-    width: 180px;
-    transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease;
-}
-
-body.dark-theme input[type="text"],
-body.dark-theme select {
-    background: #444;
-    color: #eee;
-    border-color: #666;
+    width: 160px;
+    font-size: 1rem;
 }
 
 button {
-    padding: 10px 16px;
-    margin: 5px;
-    background-color: #3498db;
+    padding: 10px 18px;
+    margin: 10px 0;
+    background-color: #ffb347;
     border: none;
-    color: white;
+    color: #333;
     border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 button:hover {
-    background-color: #2980b9;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    background-color: #ecf0f1;
-    margin: 5px auto;
-    padding: 10px;
-    width: 200px;
-    border-radius: 8px;
-    transition: background 0.5s ease, color 0.5s ease;
-}
-
-body.dark-theme li {
-    background-color: #333;
-    color: #eee;
+    background-color: #ffa500;
 }
 
 img {
-    margin-top: 10px;
-    border-radius: 8px;
+    margin-top: 20px;
+    max-width: 300px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+p, select, input {
+    font-size: 1rem;
 }
 
 footer {
-    margin-top: 40px;
-    color: #888;
-    font-size: 14px;
-}
-
-body.dark-theme footer {
-    color: #bbb;
-}
-
-/* Tema değiştirme butonu */
-.theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 8px 12px;
-    border: none;
-    background-color: #3498db;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    z-index: 1000;
-    transition: background-color 0.3s ease;
-}
-
-.theme-toggle:hover {
-    background-color: #2980b9;
+    margin-top: 50px;
+    color: #ccc;
+    font-size: 0.9rem;
 }

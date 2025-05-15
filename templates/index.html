@@ -4,111 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kripto Takip</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f4f8;
-            color: #333;
-            text-align: center;
-            padding: 20px;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        form {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            display: inline-block;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            text-align: left;
-        }
-        input[type="text"],
-        input[type="number"],
-        select {
-            padding: 8px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 16px;
-            margin-top: 12px;
-            background-color: #3498db;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .result, .error {
-            margin-top: 20px;
-        }
-        .error {
-            color: red;
-        }
-        img.coin-logo {
-            max-width: 60px;
-            margin-top: 10px;
-            border-radius: 8px;
-        }
-        img.chart {
-            margin-top: 20px;
-            max-width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-    </style>
+    <!-- CSS dosyasını static klasöründen bağla -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Kripto Para Takip</h1>
-
-    <form method="POST" action="/">
-        <label for="coin_id">Coin ID Girin (örn: bitcoin, ethereum):</label><br />
-        <input type="text" id="coin_id" name="coin_id" placeholder="bitcoin" required /><br />
-
-        <label for="currency">Para Birimi:</label><br />
-        <select id="currency" name="currency">
-            <option value="usd" {% if currency == "usd" %}selected{% endif %}>USD</option>
-            <option value="eur" {% if currency == "eur" %}selected{% endif %}>EUR</option>
-            <option value="try" {% if currency == "try" %}selected{% endif %}>TRY</option>
-        </select><br />
-
-        <label for="days">Geçmiş Gün Sayısı:</label><br />
-        <input type="number" id="days" name="days" value="{{ days or 7 }}" min="1" max="30" /><br />
-
-        <label for="chart_style">Grafik Stili:</label><br />
-        <select id="chart_style" name="chart_style">
-            <option value="line" {% if chart_style == "line" %}selected{% endif %}>Çizgi</option>
-            <option value="bar" {% if chart_style == "bar" %}selected{% endif %}>Bar</option>
-            <option value="area" {% if chart_style == "area" %}selected{% endif %}>Alan</option>
-            <option value="scatter" {% if chart_style == "scatter" %}selected{% endif %}>Nokta</option>
-        </select><br />
-
-        <button type="submit">Verileri Getir</button>
+    <form method="POST">
+        <input type="text" name="coin_id" placeholder="Coin ID (örnek: bitcoin)" required />
+        <select name="currency">
+            <option value="usd" selected>USD</option>
+            <option value="eur">EUR</option>
+            <option value="try">TRY</option>
+        </select>
+        <input type="text" name="days" placeholder="Gün (örnek: 7)" value="7" required />
+        <select name="chart_style">
+            <option value="line" selected>Çizgi Grafik</option>
+            <option value="bar">Çubuk Grafik</option>
+            <option value="area">Alan Grafik</option>
+            <option value="scatter">Nokta Grafik</option>
+        </select>
+        <br />
+        <button type="submit" name="get_price">Fiyatı Göster</button>
     </form>
 
     {% if error %}
-        <div class="error">{{ error }}</div>
+        <p style="color: #ff5555; margin-top: 20px;">{{ error }}</p>
     {% endif %}
 
     {% if coin %}
-        <div class="result">
-            <h2>{{ coin | capitalize }} - {{ price }} {{ currency.upper() }}</h2>
-            {% if logo_url %}
-                <img src="{{ logo_url }}" alt="{{ coin }} logosu" class="coin-logo" />
-            {% endif %}
-            {% if chart %}
-                <img src="data:image/png;base64,{{ chart }}" alt="Fiyat Grafiği" class="chart" />
-            {% endif %}
-        </div>
+        <h2>{{ coin | capitalize }}</h2>
+        <p>Fiyat: {{ price }} {{ currency.upper() }}</p>
+        {% if logo_url %}
+            <img src="{{ logo_url }}" alt="{{ coin }} logosu" />
+        {% endif %}
+        {% if chart %}
+            <img src="data:image/png;base64,{{ chart }}" alt="Fiyat Grafiği" />
+        {% endif %}
     {% endif %}
+
+    <footer>
+        &copy; 2025 Kripto Takip Uygulaması
+    </footer>
 </body>
 </html>

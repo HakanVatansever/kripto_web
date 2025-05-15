@@ -1,66 +1,43 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 import requests
-from datetime import datetime
 
-app = Flask(_name_)
+app = Flask(__name__)
 
-# === API Fonksiyonları ===
-def get_price(coin_id, currency):
-    try:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies={currency}"
-        response = requests.get(url)
-        data = response.json()
-        return data[coin_id][currency]
-    except:
-        return None
+COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price"
 
-def get_price_history(coin_id, days=7, currency="usd"):
-    try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency={currency}&days={days}"
-        response = requests.get(url)
-        data = response.json()
-        return data["prices"]
-    except:
-        return None
+COIN_LIST = {
+    "bitcoin": "Bitcoin",
+    "ethereum": "Ethereum",
+    "binancecoin": "Binance Coin",
+    "cardano": "Cardano",
+    "dogecoin": "Dogecoin",
+    "polkadot": "Polkadot",
+    "solana": "Solana",
+    "litecoin": "Litecoin"
+}
 
-def get_coin_logo(coin_id):
-    try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}"
-        response = requests.get(url)
-        data = response.json()
-        return data["image"]["large"]
-    except:
-        return None
-
-# === Ana Sayfa ===
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    result = None
+    selected_coin = None
 
-# === API: Coin Verileri ===
-@app.route("/api/coin", methods=["POST"])
-def coin_data():
-    data = request.json
-    coin_id = data["coin"]
-    currency = data["currency"]
-    days = int(data["days"])
+    if request.method == "POST":
+        selected_coin = request.form.get("coin")
+        if selected_coin:
+            params = {
+                "ids": selected_coin,
+                "vs_currencies": "usd"
+            }
+            try:
+                response = requests.get(COINGECKO_API_URL, params=params)
+                data = response.json()
+                price = data[selected_coin]["usd"]
+                result = f"{COIN_LIST.get(selected_coin, selected_coin).title()} şu an ${price} USD"
+            except Exception as e:
+                result = f"Hata: {str(e)}"
 
-    price = get_price(coin_id, currency)
-    history = get_price_history(coin_id, days, currency)
-    logo_url = get_coin_logo(coin_id)
+    return render_template("index.html", coins=COIN_LIST, result=result)
 
-    if price is None or history is None:
-        return jsonify({"error": "Veri alınamadı"}), 400
-
-    timestamps = [datetime.fromtimestamp(p[0] / 1000).strftime('%d-%m') for p in history]
-    values = [p[1] for p in history]
-
-    return jsonify({
-        "price": price,
-        "logo_url": logo_url,
-        "labels": timestamps,
-        "data": values
-    })
-
+# Bu kısım Render'da gerekmez, ama yerel test için ekliyoruz
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

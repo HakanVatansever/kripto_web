@@ -1,66 +1,125 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Kripto Takip</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kripto Para Animasyonlu Arka Plan</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #eee;
+    text-align: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: #f0c330;
+    margin-bottom: 20px;
+  }
+
+  form {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 12px;
+    display: inline-block;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Kayan coin logosu container */
+  .coin-marquee {
+    position: fixed;
+    top: 10px;
+    left: 0;
+    width: 100vw;
+    overflow: hidden;
+    pointer-events: none; /* tıklanmaz */
+    z-index: 0;
+    height: 80px;
+    background: transparent;
+  }
+
+  .coin-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 30s linear infinite;
+  }
+
+  .coin-track.reverse {
+    animation-direction: reverse;
+    animation-duration: 40s;
+  }
+
+  .coin-item {
+    flex: 0 0 auto;
+    margin: 0 15px;
+  }
+
+  .coin-item img {
+    width: 60px;
+    height: 60px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+    border-radius: 50%;
+  }
+
+  @keyframes marquee {
+    0%   { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
 </head>
 <body>
-    <h1>Kripto Para Takip</h1>
 
-    <form method="POST">
-        <input type="text" name="coin" placeholder="örnek: bitcoin" value="{{ coin or '' }}" required>
-        <select name="currency">
-            <option value="usd">USD</option>
-            <option value="try">TRY</option>
-            <option value="usdt">USDT</option>
-        </select>
-        <select name="days">
-            {% for d in [1, 7, 14, 30] %}
-                <option value="{{ d }}">{{ d }} gün</option>
-            {% endfor %}
-        </select>
-        <select name="chart_style">
-            <option value="line">Çizgi</option>
-            <option value="bar">Çubuk</option>
-            <option value="area">Alan</option>
-            <option value="scatter">Nokta</option>
-        </select>
-        <button type="submit">Göster</button>
-        <button name="add_fav">Favoriye Ekle</button><br><br>
+<h1>Kripto Para Takip Uygulaması</h1>
 
-        <input type="text" name="alarm_price" placeholder="Alarm Fiyatı">
-        <button name="set_alarm">Alarm Kur</button>
-    </form>
+<form>
+  <input type="text" placeholder="Bitcoin, Ethereum, ..." />
+  <button type="submit">Ara</button>
+</form>
 
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+<!-- Kayan Coin Logoları -->
+<div class="coin-marquee" aria-hidden="true">
+  <div class="coin-track" id="track1">
+    <!-- JS ile coin img'leri buraya eklenecek -->
+  </div>
+  <div class="coin-track reverse" id="track2">
+    <!-- Ters yönde başka bir set coin img -->
+  </div>
+</div>
 
-    {% if coin %}
-        <h2>{{ coin|upper }}: {{ price }}</h2>
-        {% if logo_url %}
-            <img src="{{ logo_url }}" width="64">
-        {% endif %}
-    {% endif %}
+<script>
+  // Örnek Coin Logoları (CoinGecko'dan)
+  const coins = [
+    {id: "bitcoin", img: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"},
+    {id: "ethereum", img: "https://assets.coingecko.com/coins/images/279/large/ethereum.png"},
+    {id: "binancecoin", img: "https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png"},
+    {id: "ripple", img: "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png"},
+    {id: "cardano", img: "https://assets.coingecko.com/coins/images/975/large/cardano.png"},
+    {id: "dogecoin", img: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png"},
+    {id: "polkadot", img: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png"},
+  ];
 
-    {% if chart %}
-        <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
-    {% endif %}
+  function createCoinElements(trackId) {
+    const track = document.getElementById(trackId);
+    // Her coin img'sini iki kez ekleyip kesintisiz kaydırma sağlanacak
+    for(let repeat = 0; repeat < 2; repeat++) {
+      coins.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "coin-item";
+        const img = document.createElement("img");
+        img.src = c.img;
+        img.alt = c.id;
+        div.appendChild(img);
+        track.appendChild(div);
+      });
+    }
+  }
 
-    <h3>Favoriler</h3>
-    <ul>
-        {% for fav in favorites %}
-            <li>{{ fav|upper }}</li>
-        {% endfor %}
-    </ul>
+  createCoinElements("track1");
+  createCoinElements("track2");
+</script>
 
-    {% if alarm_set %}
-        <p style="color:green;">Alarm başarıyla kuruldu.</p>
-    {% endif %}
-
-    <footer>
-        <p>Veri: CoinGecko API</p>
-    </footer>
 </body>
 </html>

@@ -6,16 +6,9 @@ import io, base64
 
 app = Flask(__name__)
 
-def get_coin_logo(coin_id):
-    # fonksiyon içeriği
-    pass
-
-app.jinja_env.globals.update(get_coin_logo=get_coin_logo)
-
 favorites = []
 alarms = []
 
-# Tüm coin listesi başta alınır
 def get_all_coins():
     try:
         url = "https://api.coingecko.com/api/v3/coins/list"
@@ -24,7 +17,13 @@ def get_all_coins():
     except:
         return []
 
-coin_list = get_all_coins()
+def coin_list():
+    try:
+        url = "https://api.coingecko.com/api/v3/coins/list"
+        res = requests.get(url).json()
+        return sorted(res, key=lambda x: x["name"])  # İsimlere göre sırala
+    except:
+        return []
 
 def get_price(coin_id, currency):
     try:
@@ -41,15 +40,6 @@ def get_price_history(coin_id, days=7, currency="usd"):
         return data["prices"]
     except:
         return None
-    
-def coin_list():
-    try:
-        url = "https://api.coingecko.com/api/v3/coins/list"
-        res = requests.get(url).json()
-        return sorted(res, key=lambda x: x["name"])  # İsimlere göre sırala
-    except:
-        return []
-
 
 def get_coin_logo(coin_id):
     try:
@@ -83,6 +73,9 @@ def create_chart(prices, style="line"):
     plt.close()
     return base64.b64encode(img.read()).decode("utf-8")
 
+# Jinja'da fonksiyonu kullanılabilir yapmak için
+app.jinja_env.globals.update(get_coin_logo=get_coin_logo)
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     context = {
@@ -93,7 +86,7 @@ def index():
         "favorites": favorites,
         "alarm_set": False,
         "error": None,
-        "coin_list": coin_list  # Tüm coin'ler dropdown için
+        "coin_list": coin_list()  # Fonksiyon çağrısı burada!
     }
 
     if request.method == "POST":
@@ -131,9 +124,6 @@ def index():
                 context["error"] = "Alarm fiyatı geçersiz!"
 
     return render_template("index.html", get_coin_logo=get_coin_logo, **context)
-
-
-
 
 
 if __name__ == "__main__":

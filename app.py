@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import io, base64
 
 app = Flask(__name__)
+
+app.jinja_env.globals.update(get_coin_logo=get_coin_logo)
+
 favorites = []
 alarms = []
 

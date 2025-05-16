@@ -1,26 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Binance Kripto Takip</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌓Tema Değiştir</button>
+
+<h1>Binance Kripto Takip Uygulaması</h1>
+
 <form method="post">
-    <label for="coin_id">Coin ID Girin (örnek: bitcoin, ethereum):</label><br>
-    <input type="text" name="coin_id" placeholder="bitcoin" required><br><br>
+    <label for="coin_symbol">Coin Sembolü (örneğin: BTCUSDT):</label><br>
+    <input type="text" name="coin_symbol" placeholder="BTCUSDT" required><br>
 
     <label for="days">Veri Aralığı:</label><br>
     <select name="days">
         <option value="1">1 Gün</option>
         <option value="7" selected>7 Gün</option>
         <option value="30">30 Gün</option>
-    </select><br><br>
+    </select><br>
 
     <label for="chart_style">Grafik Türü:</label><br>
     <select name="chart_style">
-        <option value="line" selected>Çizgi</option>
+        <option value="line">Çizgi</option>
         <option value="bar">Bar</option>
         <option value="area">Alan</option>
         <option value="scatter">Nokta</option>
-    </select><br><br>
+    </select><br>
 
     <button type="submit">Fiyat Göster</button>
-    <button type="submit" name="add_fav" value="1">Favorilere Ekle</button><br><br>
+    <button name="add_fav" value="1">Favorilere Ekle</button><br><br>
 
     <label for="alarm_price">Alarm Fiyatı:</label>
     <input type="text" name="alarm_price" placeholder="Örn: 50000">
-    <button type="submit" name="set_alarm" value="1">Alarm Kur</button>
+    <button name="set_alarm" value="1">Alarm Kur</button>
 </form>
+
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+{% endif %}
+
+{% if symbol and price %}
+    <h2>{{ symbol.upper() }} - {{ price }}</h2>
+{% endif %}
+
+{% if chart %}
+    <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
+{% endif %}
+
+{% if favorites %}
+    <h3>Favori Coinler</h3>
+    <ul>
+        {% for fav in favorites %}
+            <li>{{ fav }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if alarm_set %}
+    <p style="color:green;">Alarm başarıyla kuruldu!</p>
+{% endif %}
+
+<footer>
+    <p>© 2025 Binance Kripto Takip</p>
+</footer>
+
+<script>
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-theme');
+        body.classList.toggle('light-theme');
+        localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+    }
+
+    window.onload = () => {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.body.classList.add(theme + '-theme');
+    };
+</script>
+</body>
+</html>

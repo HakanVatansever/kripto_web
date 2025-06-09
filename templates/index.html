@@ -1,84 +1,281 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Binance Kripto Takip</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crypto Tracker - Advanced</title>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: #121212;
+        color: #eee;
+        margin: 0; padding: 0;
+        min-height: 100vh;
+    }
+    header {
+        background: #1f1f1f;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+    header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #00d8ff;
+    }
+    nav {
+        display: flex;
+        gap: 20px;
+    }
+    nav button {
+        background: transparent;
+        border: none;
+        color: #bbb;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    nav button.active,
+    nav button:hover {
+        background: #00d8ff;
+        color: #121212;
+        box-shadow: 0 0 8px #00d8ffaa;
+    }
+    main {
+        padding: 24px;
+    }
+    #heatmap {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 14px;
+    }
+    .heatmap-item {
+        background: #222;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        box-shadow: 0 0 10px #000;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    .heatmap-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 14px #00d8ffcc;
+    }
+    .coin-symbol {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+    }
+    .coin-price {
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+    .price-change {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .positive {
+        color: #4caf50;
+        text-shadow: 0 0 5px #4caf5088;
+    }
+    .negative {
+        color: #ef5350;
+        text-shadow: 0 0 5px #ef535088;
+    }
+    #charts, #heatmap, #list {
+        display: none;
+    }
+    #charts.active,
+    #heatmap.active,
+    #list.active {
+        display: block;
+    }
+    #list table {
+        width: 100%;
+        border-collapse: collapse;
+        color: #eee;
+    }
+    #list th, #list td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #333;
+        text-align: left;
+    }
+    #list th {
+        background: #222;
+    }
+    #list tbody tr:hover {
+        background: #00d8ff22;
+        cursor: pointer;
+    }
+    @media (max-width: 700px) {
+        #heatmap {
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        }
+    }
+</style>
 </head>
 <body>
 
-<button class="theme-toggle" onclick="toggleTheme()">🌓Tema Değiştir</button>
+<header>
+    <h1>Crypto Tracker</h1>
+    <nav>
+        <button id="tab-heatmap" class="active">Heatmap</button>
+        <button id="tab-charts">Charts</button>
+        <button id="tab-list">List</button>
+    </nav>
+</header>
 
-<h1>Binance Kripto Takip Uygulaması</h1>
+<main>
+    <section id="heatmap" class="active">
+        <p>Loading heatmap data...</p>
+    </section>
 
-<form method="post">
-    <label for="coin_symbol">Coin Sembolü (örneğin: BTCUSDT):</label><br>
-    <input type="text" name="coin_symbol" placeholder="BTCUSDT" required><br>
+    <section id="charts">
+        <h2>Charts</h2>
+        <p>Choose a coin from Heatmap or List to view chart here.</p>
+        <div id="chart-container" style="margin-top:20px;">
+        </div>
+    </section>
 
-    <label for="days">Veri Aralığı:</label><br>
-    <select name="days">
-        <option value="1">1 Gün</option>
-        <option value="7" selected>7 Gün</option>
-        <option value="30">30 Gün</option>
-    </select><br>
-
-    <label for="chart_style">Grafik Türü:</label><br>
-    <select name="chart_style">
-        <option value="line">Çizgi</option>
-        <option value="bar">Bar</option>
-        <option value="area">Alan</option>
-        <option value="scatter">Nokta</option>
-    </select><br>
-
-    <button type="submit">Fiyat Göster</button>
-    <button name="add_fav" value="1">Favorilere Ekle</button><br><br>
-
-    <label for="alarm_price">Alarm Fiyatı:</label>
-    <input type="text" name="alarm_price" placeholder="Örn: 50000">
-    <button name="set_alarm" value="1">Alarm Kur</button>
-</form>
-
-{% if error %}
-    <p style="color:red;">{{ error }}</p>
-{% endif %}
-
-{% if symbol and price %}
-    <h2>{{ symbol.upper() }} - {{ price }}</h2>
-{% endif %}
-
-{% if chart %}
-    <img src="data:image/png;base64,{{ chart }}" alt="Grafik">
-{% endif %}
-
-{% if favorites %}
-    <h3>Favori Coinler</h3>
-    <ul>
-        {% for fav in favorites %}
-            <li>{{ fav }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
-
-{% if alarm_set %}
-    <p style="color:green;">Alarm başarıyla kuruldu!</p>
-{% endif %}
-
-<footer>
-    <p>© 2025 Binance Kripto Takip</p>
-</footer>
+    <section id="list">
+        <h2>Coin List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Price (USD)</th>
+                    <th>24h Change</th>
+                </tr>
+            </thead>
+            <tbody id="coin-list-body">
+            </tbody>
+        </table>
+    </section>
+</main>
 
 <script>
-    function toggleTheme() {
-        const body = document.body;
-        body.classList.toggle('dark-theme');
-        body.classList.toggle('light-theme');
-        localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+    // Sekmeler arası geçiş
+    const tabs = {
+        heatmap: document.getElementById('heatmap'),
+        charts: document.getElementById('charts'),
+        list: document.getElementById('list'),
+    };
+    const buttons = {
+        heatmap: document.getElementById('tab-heatmap'),
+        charts: document.getElementById('tab-charts'),
+        list: document.getElementById('tab-list'),
+    };
+
+    function setActiveTab(tabName) {
+        for (const t in tabs) {
+            tabs[t].classList.remove('active');
+            buttons[t].classList.remove('active');
+        }
+        tabs[tabName].classList.add('active');
+        buttons[tabName].classList.add('active');
     }
 
-    window.onload = () => {
-        const theme = localStorage.getItem('theme') || 'light';
-        document.body.classList.add(theme + '-theme');
-    };
+    buttons.heatmap.addEventListener('click', () => setActiveTab('heatmap'));
+    buttons.charts.addEventListener('click', () => setActiveTab('charts'));
+    buttons.list.addEventListener('click', () => setActiveTab('list'));
+
+    const heatmapEl = document.getElementById('heatmap');
+    const listBody = document.getElementById('coin-list-body');
+    const chartContainer = document.getElementById('chart-container');
+
+    let coinsData = [];
+
+    async function fetchCoinsData() {
+        heatmapEl.innerHTML = '<p>Loading heatmap data...</p>';
+        listBody.innerHTML = '';
+        chartContainer.innerHTML = '';
+
+        try {
+            const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h');
+            const data = await res.json();
+            coinsData = data;
+
+            heatmapEl.innerHTML = '';
+            data.forEach(coin => {
+                const change = coin.price_change_percentage_24h ?? 0;
+                let bgColor;
+                if (change >= 0) {
+                    bgColor = `rgba(76,175,80,${Math.min(change/10, 1)})`;
+                } else {
+                    bgColor = `rgba(239,83,80,${Math.min(-change/10, 1)})`;
+                }
+
+                const div = document.createElement('div');
+                div.classList.add('heatmap-item');
+                div.style.backgroundColor = bgColor;
+                div.innerHTML = `
+                    <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
+                    <div class="coin-price">$${coin.current_price.toFixed(2)}</div>
+                    <div class="price-change ${change >= 0 ? 'positive' : 'negative'}">${change.toFixed(2)}%</div>
+                `;
+                div.title = `${coin.name}\nPrice: $${coin.current_price}\nChange 24h: ${change.toFixed(2)}%`;
+
+                div.addEventListener('click', () => {
+                    setActiveTab('charts');
+                    renderChart(coin);
+                });
+
+                heatmapEl.appendChild(div);
+            });
+
+            listBody.innerHTML = '';
+            data.forEach(coin => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${coin.symbol.toUpperCase()}</td>
+                    <td>${coin.name}</td>
+                    <td>$${coin.current_price.toFixed(2)}</td>
+                    <td class="${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">${coin.price_change_percentage_24h.toFixed(2)}%</td>
+                `;
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    setActiveTab('charts');
+                    renderChart(coin);
+                });
+                listBody.appendChild(row);
+            });
+
+        } catch(e) {
+            heatmapEl.innerHTML = '<p style="color:#f44336;">Failed to load data. Try again later.</p>';
+            console.error(e);
+        }
+    }
+
+    async function renderChart(coin) {
+        chartContainer.innerHTML = '<p>Loading chart...</p>';
+        try {
+            const res = await fetch(`/coin_data/${coin.id}`);
+            const data = await res.json();
+            if (data.error) {
+                chartContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
+                return;
+            }
+            chartContainer.innerHTML = `
+                <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
+                <p>Current Price: $${coin.current_price.toFixed(2)}</p>
+                <img src="data:image/png;base64,${data.chart}" alt="Price Chart" style="max-width:100%; border-radius:10px;"/>
+            `;
+        } catch (e) {
+            chartContainer.innerHTML = `<p style="color:red;">Failed to load chart data.</p>`;
+            console.error(e);
+        }
+    }
+
+    fetchCoinsData();
 </script>
+
 </body>
 </html>

@@ -1,103 +1,59 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, jsonify
 import requests
+import matplotlib
+matplotlib.use('Agg')  # GUI gerektirmez
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-import io, base64
+import matplotlib.dates as mdates
+from datetime import datetime
+import io
+import base64
+import time
 
 app = Flask(__name__)
+API_REQUEST_DELAY = 3  # API rate limit için bekleme süresi
 
-favorites = []
-alarms = []
+def get_historical_data(coin_id, days=30):
+    # CoinGecko API’den coin’in tarihsel fiyat verisini alır
+    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency=usd&days={days}"
+    response = requests.get(url)
+    response.raise_for_status()
+    time.sleep(API_REQUEST_DELAY)  # API aşımı önle
+    data = response.json()
+    return data['prices']
 
-def get_binance_price(symbol):
-    try:
-        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol.upper()}"
-        res = requests.get(url)
-        res.raise_for_status()
-        return float(res.json()['price'])
-    except:
-        return None
-
-def get_binance_history(symbol, days=7):
-    try:
-        interval = "1d"
-        limit = days
-        url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval={interval}&limit={limit}"
-        res = requests.get(url)
-        res.raise_for_status()
-        data = res.json()
-        prices = [[int(item[0]), float(item[4])] for item in data]  # close price
-        return prices
-    except:
-        return None
-
-def create_chart(prices, style="line"):
-    timestamps = [datetime.fromtimestamp(p[0] / 1000).strftime('%d-%m') for p in prices]
+def create_chart(prices):
+    # Matplotlib ile grafik oluşturup base64 string döner
+    dates = [datetime.fromtimestamp(p[0]/1000) for p in prices]
     values = [p[1] for p in prices]
 
-    plt.figure(figsize=(10, 4))
-    if style == "bar":
-        plt.bar(timestamps, values, color="orange")
-    elif style == "area":
-        plt.fill_between(timestamps, values, color="skyblue", alpha=0.5)
-        plt.plot(timestamps, values, color='blue')
-    elif style == "scatter":
-        plt.scatter(timestamps, values, color="red")
-    else:
-        plt.plot(timestamps, values, marker='o')
-
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(dates, values, color='#673AB7', linewidth=2)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.set_title('Price History (Last 30 days)')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Price (USD)')
+    fig.autofmt_xdate()
+    fig.tight_layout()
 
     img = io.BytesIO()
-    plt.savefig(img, format="png", bbox_inches="tight")
+    fig.savefig(img, format='png', dpi=100)
     img.seek(0)
-    plt.close()
-    return base64.b64encode(img.read()).decode("utf-8")
+    plt.close(fig)
+    return base64.b64encode(img.read()).decode('utf-8')
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
-    context = {
-        "symbol": None,
-        "price": None,
-        "chart": None,
-        "favorites": favorites,
-        "alarm_set": False,
-        "error": None
-    }
+    return render_template("index.html")
 
-    if request.method == "POST":
-        symbol = request.form.get("coin_symbol", "").upper()
-        days = int(request.form.get("days", 7))
-        style = request.form.get("chart_style", "line")
-
-        if not symbol:
-            context["error"] = "Lütfen bir coin sembolü girin (örneğin: BTCUSDT)!"
-        else:
-            price = get_binance_price(symbol)
-            if price is None:
-                context["error"] = "Fiyat verisi alınamadı. Sembol doğru mu?"
-            else:
-                context["symbol"] = symbol
-                context["price"] = price
-                history = get_binance_history(symbol, days)
-                if history:
-                    context["chart"] = create_chart(history, style)
-                else:
-                    context["error"] = "Geçmiş veri bulunamadı."
-
-        if "add_fav" in request.form and symbol and symbol not in favorites:
-            favorites.append(symbol)
-
-        if "set_alarm" in request.form:
-            try:
-                target = float(request.form["alarm_price"])
-                alarms.append({"coin": symbol, "target": target})
-                context["alarm_set"] = True
-            except:
-                context["error"] = "Alarm fiyatı geçersiz!"
-
-    return render_template("index.html", **context)
+@app.route("/coin_data/<coin_id>")
+def coin_data(coin_id):
+    try:
+        prices = get_historical_data(coin_id, days=30)
+        chart_base64 = create_chart(prices)
+        return jsonify({"chart": chart_base64})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

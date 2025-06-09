@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{ coin.name }} - Crypto Tracker</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #eee;
+        font-family: 'Poppins', sans-serif;
+        padding: 20px;
+        margin: 0;
+        min-height: 100vh;
+    }
+    a {
+        color: #00d8ff;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    h1 {
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #00d8ff;
+    }
+    .coin-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .coin-logo {
+        width: 50px;
+        height: 50px;
+    }
+    p {
+        margin: 5px 0;
+        font-size: 1.1rem;
+    }
+    #chart-container {
+        margin-top: 30px;
+        max-width: 900px;
+        background: #1e2a38;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 0 20px #00d8ff55;
+    }
+</style>
+</head>
+<body>
+
+<a href="/">← Back to Home</a>
+
+<div class="coin-header">
+    <img src="{{ coin.image.large }}" alt="{{ coin.name }} logo" class="coin-logo" />
+    <h1>{{ coin.name }} ({{ coin.symbol.upper() }})</h1>
+</div>
+
+<p><strong>Current Price:</strong> ${{ coin.market_data.current_price.usd }}</p>
+<p><strong>Market Cap Rank:</strong> {{ coin.market_cap_rank }}</p>
+<p><strong>Market Cap:</strong> ${{ "{:,}".format(coin.market_data.market_cap.usd) }}</p>
+
+<div id="chart-container">
+    <canvas id="priceChart" width="900" height="400"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('priceChart').getContext('2d');
+
+    // CoinGecko sparkline 7d fiyat verisi
+    const prices = {{ coin.market_data.sparkline_7d.price | safe }};
+    const labels = prices.map((_, i) => i);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price (USD) Last 7 Days',
+                data: prices,
+                borderColor: '#00d8ff',
+                backgroundColor: 'rgba(0, 216, 255, 0.3)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { display: false },
+                y: {
+                    beginAtZero: false,
+                    ticks: { color: '#eee' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#00d8ff' } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,281 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Crypto Tracker - Advanced</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" />
+  <style>
     body {
-        font-family: 'Poppins', sans-serif;
-        background: #121212;
-        color: #eee;
-        margin: 0; padding: 0;
-        min-height: 100vh;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #121212;
+      color: #eee;
     }
     header {
-        background: #1f1f1f;
-        padding: 12px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      background-color: #1f1f1f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
     }
     header h1 {
-        margin: 0;
-        font-weight: 700;
-        font-size: 1.5rem;
-        color: #00d8ff;
-    }
-    nav {
-        display: flex;
-        gap: 20px;
+      color: #00d8ff;
+      font-size: 1.75rem;
     }
     nav button {
-        background: transparent;
-        border: none;
-        color: #bbb;
-        font-weight: 600;
-        font-size: 1rem;
-        padding: 8px 16px;
-        cursor: pointer;
-        border-radius: 8px;
-        transition: background-color 0.3s, color 0.3s;
+      background: none;
+      border: none;
+      color: #bbb;
+      font-weight: 600;
+      margin-left: 1rem;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.3s;
     }
-    nav button.active,
-    nav button:hover {
-        background: #00d8ff;
-        color: #121212;
-        box-shadow: 0 0 8px #00d8ffaa;
+    nav button:hover,
+    nav button.active {
+      background-color: #00d8ff;
+      color: #121212;
+      box-shadow: 0 0 8px #00d8ffaa;
     }
     main {
-        padding: 24px;
+      padding: 2rem;
+    }
+    .section {
+      display: none !important;
+    }
+    .section.active {
+      display: block !important;
+    }
+    #heatmap.active {
+      display: grid !important;
     }
     #heatmap {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-        gap: 14px;
+      /* BURADA DEĞİŞİKLİK YAPILDI: gap azaltıldı, minmax ayarlandı */
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Öğeleri daha sıkı yerleştirir */
+      gap: 0.5rem; /* Boşluğu azaltır */
+      padding: 0.5rem; /* Genel boşluğu azaltır */
     }
     .heatmap-item {
-        background: #222;
-        border-radius: 12px;
-        padding: 10px;
-        text-align: center;
-        box-shadow: 0 0 10px #000;
-        cursor: pointer;
-        transition: transform 0.2s ease;
+      padding: 1rem; /* İç boşluğu korur veya biraz azaltır */
+      background-color: #222;
+      border-radius: 8px; /* Köşeleri biraz daha keskin yapar */
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Daha hafif gölgeler */
+      border: 1px solid rgba(0, 0, 0, 0.1);
     }
     .heatmap-item:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 14px #00d8ffcc;
+      transform: scale(1.03); /* Daha az büyüme */
+      box-shadow: 0 0 10px #00d8ffcc;
     }
     .coin-symbol {
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 6px;
+      font-size: 1.2rem; /* Sembol boyutunu korur */
+      font-weight: 700;
+      margin-bottom: 0.4rem; /* Boşluğu biraz azaltır */
     }
     .coin-price {
-        font-size: 1rem;
-        margin-bottom: 4px;
+      font-size: 1rem; /* Fiyat boyutunu korur */
+      margin: 0.4rem 0;
     }
-    .price-change {
-        font-weight: 600;
-        font-size: 0.9rem;
+    .price-change.positive {
+      color: #4caf50;
+      font-weight: 600;
     }
-    .positive {
-        color: #4caf50;
-        text-shadow: 0 0 5px #4caf5088;
+    .price-change.negative {
+      color: #ef5350;
+      font-weight: 600;
     }
-    .negative {
-        color: #ef5350;
-        text-shadow: 0 0 5px #ef535088;
+    table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    #charts, #heatmap, #list {
-        display: none;
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #333;
+      text-align: left;
     }
-    #charts.active,
-    #heatmap.active,
-    #list.active {
-        display: block;
+    th {
+      background-color: #222;
     }
-    #list table {
-        width: 100%;
-        border-collapse: collapse;
-        color: #eee;
+    tbody tr:hover {
+      background-color: #00d8ff22;
     }
-    #list th, #list td {
-        padding: 10px 14px;
-        border-bottom: 1px solid #333;
-        text-align: left;
+    img.chart {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      border-radius: 12px;
+      margin-top: 1rem;
     }
-    #list th {
-        background: #222;
-    }
-    #list tbody tr:hover {
-        background: #00d8ff22;
-        cursor: pointer;
-    }
-    @media (max-width: 700px) {
-        #heatmap {
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-        }
-    }
-</style>
+  </style>
 </head>
 <body>
-
-<header>
-    <h1>Crypto Tracker</h1>
+  <header>
+    <h1>Crypto Dashboard</h1>
     <nav>
-        <button id="tab-heatmap" class="active">Heatmap</button>
-        <button id="tab-charts">Charts</button>
-        <button id="tab-list">List</button>
+      <button id="btn-heatmap" class="active">Heatmap</button>
+      <button id="btn-charts">Charts</button>
+      <button id="btn-list">List</button>
     </nav>
-</header>
+  </header>
 
-<main>
-    <section id="heatmap" class="active">
-        <p>Loading heatmap data...</p>
+  <main>
+    <section id="heatmap" class="section active">
+      <p>Loading heatmap...</p>
     </section>
 
-    <section id="charts">
-        <h2>Charts</h2>
-        <p>Choose a coin from Heatmap or List to view chart here.</p>
-        <div id="chart-container" style="margin-top:20px;">
-        </div>
+    <section id="charts" class="section">
+      <h2>Chart</h2>
+      <div id="chart-container"><p>Select a coin to view chart</p></div>
     </section>
 
-    <section id="list">
-        <h2>Coin List</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Symbol</th>
-                    <th>Name</th>
-                    <th>Price (USD)</th>
-                    <th>24h Change</th>
-                </tr>
-            </thead>
-            <tbody id="coin-list-body">
-            </tbody>
-        </table>
+    <section id="list" class="section">
+      <h2>Coin List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>24h Change</th>
+          </tr>
+        </thead>
+        <tbody id="coin-list"></tbody>
+      </table>
     </section>
-</main>
+  </main>
 
-<script>
-    // Sekmeler arası geçiş
-    const tabs = {
-        heatmap: document.getElementById('heatmap'),
-        charts: document.getElementById('charts'),
-        list: document.getElementById('list'),
+  <script>
+    const sections = {
+      heatmap: document.getElementById('heatmap'),
+      charts: document.getElementById('charts'),
+      list: document.getElementById('list')
     };
     const buttons = {
-        heatmap: document.getElementById('tab-heatmap'),
-        charts: document.getElementById('tab-charts'),
-        list: document.getElementById('tab-list'),
+      heatmap: document.getElementById('btn-heatmap'),
+      charts: document.getElementById('btn-charts'),
+      list: document.getElementById('btn-list')
     };
 
-    function setActiveTab(tabName) {
-        for (const t in tabs) {
-            tabs[t].classList.remove('active');
-            buttons[t].classList.remove('active');
-        }
-        tabs[tabName].classList.add('active');
-        buttons[tabName].classList.add('active');
+    function switchTab(name) {
+      Object.keys(sections).forEach(k => sections[k].classList.remove('active'));
+      Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
+      
+      sections[name].classList.add('active');
+      buttons[name].classList.add('active');
     }
 
-    buttons.heatmap.addEventListener('click', () => setActiveTab('heatmap'));
-    buttons.charts.addEventListener('click', () => setActiveTab('charts'));
-    buttons.list.addEventListener('click', () => setActiveTab('list'));
+    buttons.heatmap.addEventListener('click', () => switchTab('heatmap'));
+    buttons.charts.addEventListener('click', () => switchTab('charts'));
+    buttons.list.addEventListener('click', () => switchTab('list'));
 
     const heatmapEl = document.getElementById('heatmap');
-    const listBody = document.getElementById('coin-list-body');
-    const chartContainer = document.getElementById('chart-container');
+    const listEl = document.getElementById('coin-list');
+    const chartEl = document.getElementById('chart-container');
 
-    let coinsData = [];
-
-    async function fetchCoinsData() {
-        heatmapEl.innerHTML = '<p>Loading heatmap data...</p>';
-        listBody.innerHTML = '';
-        chartContainer.innerHTML = '';
-
-        try {
-            const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h');
-            const data = await res.json();
-            coinsData = data;
-
-            heatmapEl.innerHTML = '';
-            data.forEach(coin => {
-                const change = coin.price_change_percentage_24h ?? 0;
-                let bgColor;
-                if (change >= 0) {
-                    bgColor = `rgba(76,175,80,${Math.min(change/10, 1)})`;
-                } else {
-                    bgColor = `rgba(239,83,80,${Math.min(-change/10, 1)})`;
-                }
-
-                const div = document.createElement('div');
-                div.classList.add('heatmap-item');
-                div.style.backgroundColor = bgColor;
-                div.innerHTML = `
-                    <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
-                    <div class="coin-price">$${coin.current_price.toFixed(2)}</div>
-                    <div class="price-change ${change >= 0 ? 'positive' : 'negative'}">${change.toFixed(2)}%</div>
-                `;
-                div.title = `${coin.name}\nPrice: $${coin.current_price}\nChange 24h: ${change.toFixed(2)}%`;
-
-                div.addEventListener('click', () => {
-                    setActiveTab('charts');
-                    renderChart(coin);
-                });
-
-                heatmapEl.appendChild(div);
-            });
-
-            listBody.innerHTML = '';
-            data.forEach(coin => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${coin.symbol.toUpperCase()}</td>
-                    <td>${coin.name}</td>
-                    <td>$${coin.current_price.toFixed(2)}</td>
-                    <td class="${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">${coin.price_change_percentage_24h.toFixed(2)}%</td>
-                `;
-                row.style.cursor = 'pointer';
-                row.addEventListener('click', () => {
-                    setActiveTab('charts');
-                    renderChart(coin);
-                });
-                listBody.appendChild(row);
-            });
-
-        } catch(e) {
-            heatmapEl.innerHTML = '<p style="color:#f44336;">Failed to load data. Try again later.</p>';
-            console.error(e);
+    async function fetchMarketData() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h');
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
         }
+        const data = await res.json();
+        renderHeatmap(data);
+        renderList(data);
+      } catch (err) {
+        heatmapEl.innerHTML = '<p style="color:red; text-align:center;">API Error. Try again later.</p>';
+        listEl.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Failed to load coin list.</td></tr>';
+        chartEl.innerHTML = '<p style="color:red; text-align:center;">Failed to load chart data.</p>';
+        console.error("Market data fetch error:", err);
+      }
+    }
+
+    function renderHeatmap(data) {
+      heatmapEl.innerHTML = '';
+      data.forEach(coin => {
+        const change = coin.price_change_percentage_24h || 0;
+        const opacity = Math.min(Math.abs(change) / 10, 1);
+        const bg = change >= 0 ? `rgba(76,175,80,${opacity})` : `rgba(239,83,80,${opacity})`;
+        
+        const el = document.createElement('div');
+        el.className = 'heatmap-item';
+        el.style.backgroundColor = bg;
+        el.innerHTML = `
+          <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
+          <div class="coin-price">$${coin.current_price.toFixed(2)}</div>
+          <div class="price-change ${change >= 0 ? 'positive' : 'negative'}">${change.toFixed(2)}%</div>
+        `;
+        el.onclick = () => {
+          switchTab('charts');
+          renderChart(coin);
+        };
+        heatmapEl.appendChild(el);
+      });
+    }
+
+    function renderList(data) {
+      listEl.innerHTML = '';
+      data.forEach(coin => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${coin.symbol.toUpperCase()}</td>
+          <td>${coin.name}</td>
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td class="price-change ${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">${coin.price_change_percentage_24h.toFixed(2)}%</td>
+        `;
+        row.onclick = () => {
+          switchTab('charts');
+          renderChart(coin);
+        };
+        listEl.appendChild(row);
+      });
     }
 
     async function renderChart(coin) {
-        chartContainer.innerHTML = '<p>Loading chart...</p>';
-        try {
-            const res = await fetch(`/coin_data/${coin.id}`);
-            const data = await res.json();
-            if (data.error) {
-                chartContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
-                return;
-            }
-            chartContainer.innerHTML = `
-                <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
-                <p>Current Price: $${coin.current_price.toFixed(2)}</p>
-                <img src="data:image/png;base64,${data.chart}" alt="Price Chart" style="max-width:100%; border-radius:10px;"/>
-            `;
-        } catch (e) {
-            chartContainer.innerHTML = `<p style="color:red;">Failed to load chart data.</p>`;
-            console.error(e);
+      chartEl.innerHTML = '<p style="text-align:center;">Loading chart...</p>';
+      try {
+        const res = await fetch(`/coin_data/${coin.id}`);
+        if (!res.ok) {
+            throw new Error(`Failed to fetch chart data: ${res.statusText}`);
         }
+        const data = await res.json();
+        if (data.error) {
+          chartEl.innerHTML = `<p style="color:red; text-align:center;">${data.error}</p>`;
+        } else {
+          chartEl.innerHTML = `
+            <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
+            <p>Current Price: $${coin.current_price.toFixed(2)}</p>
+            <img src="data:image/png;base64,${data.chart}" class="chart" alt="${coin.name} chart" />
+          `;
+        }
+      } catch (err) {
+        chartEl.innerHTML = '<p style="color:red; text-align:center;">Failed to load chart. Ensure backend server is running.</p>';
+        console.error("Chart loading error:", err);
+      }
     }
 
-    fetchCoinsData();
-</script>
-
+    fetchMarketData();
+  </script>
 </body>
 </html>

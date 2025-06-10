@@ -55,42 +55,44 @@
       display: grid !important;
     }
     #heatmap {
-      /* BURADA DEĞİŞİKLİK YAPILDI: gap azaltıldı, minmax ayarlandı */
+      /* Daha bütüncül bir görünüm için değişiklikler */
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Öğeleri daha sıkı yerleştirir */
-      gap: 0.5rem; /* Boşluğu azaltır */
-      padding: 0.5rem; /* Genel boşluğu azaltır */
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Kareleri daha da sıkılaştırır */
+      gap: 0.2rem; /* Boşluğu minimuma indirir */
+      padding: 0.2rem; /* Genel dış boşluğu azaltır */
     }
     .heatmap-item {
-      padding: 1rem; /* İç boşluğu korur veya biraz azaltır */
+      padding: 0.8rem; /* İç boşluğu ayarlar */
       background-color: #222;
-      border-radius: 8px; /* Köşeleri biraz daha keskin yapar */
+      border-radius: 4px; /* Köşeleri daha da keskin yapar, kare hissiyatını artırır */
       text-align: center;
       cursor: pointer;
       transition: transform 0.2s;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Daha hafif gölgeler */
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Daha ince gölgeler */
+      border: 1px solid rgba(0, 0, 0, 0.05); /* Çok hafif bir kenarlık */
     }
     .heatmap-item:hover {
-      transform: scale(1.03); /* Daha az büyüme */
-      box-shadow: 0 0 10px #00d8ffcc;
+      transform: scale(1.02); /* Çok hafif büyüme */
+      box-shadow: 0 0 8px #00d8ffaa; /* Hover'da daha belirgin gölge */
     }
     .coin-symbol {
-      font-size: 1.2rem; /* Sembol boyutunu korur */
+      font-size: 1.1rem; /* Sembol boyutunu ayarlar */
       font-weight: 700;
-      margin-bottom: 0.4rem; /* Boşluğu biraz azaltır */
+      margin-bottom: 0.3rem; /* Boşluğu azaltır */
     }
     .coin-price {
-      font-size: 1rem; /* Fiyat boyutunu korur */
-      margin: 0.4rem 0;
+      font-size: 0.9rem; /* Fiyat boyutunu ayarlar */
+      margin: 0.3rem 0;
     }
     .price-change.positive {
       color: #4caf50;
       font-weight: 600;
+      font-size: 0.85rem; /* Yüzde değişimi boyutunu ayarlar */
     }
     .price-change.negative {
       color: #ef5350;
       font-weight: 600;
+      font-size: 0.85rem; /* Yüzde değişimi boyutunu ayarlar */
     }
     table {
       width: 100%;
@@ -114,6 +116,29 @@
       border-radius: 12px;
       margin-top: 1rem;
     }
+    /* Yeni CSS: Grafik seçenekleri için stil */
+    .chart-options {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        justify-content: center;
+        flex-wrap: wrap; /* Küçük ekranlarda sığdırmak için */
+    }
+    .chart-options button {
+        background-color: #333;
+        color: #eee;
+        border: 1px solid #555;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .chart-options button.active,
+    .chart-options button:hover {
+        background-color: #00d8ff;
+        color: #121212;
+        border-color: #00d8ff;
+    }
   </style>
 </head>
 <body>
@@ -133,6 +158,9 @@
 
     <section id="charts" class="section">
       <h2>Chart</h2>
+      <div class="chart-options" id="chart-time-options">
+        <!-- Grafik zaman aralığı seçenekleri buraya JS ile yüklenecek -->
+      </div>
       <div id="chart-container"><p>Select a coin to view chart</p></div>
     </section>
 
@@ -153,6 +181,14 @@
   </main>
 
   <script>
+    // ** API_BASE_URL: Backend sunucunuzun temel URL'si **
+    // Burayı kendi Render uygulamanızın canlı URL'siyle DEĞİŞTİRMELİSİNİZ!
+    // Örnek: "https://your-render-app-name.onrender.com"
+    // Eğer Flask uygulamanızı yerel olarak çalıştırıyorsanız (app.run()),
+    // genellikle "http://127.0.0.1:5000" olur.
+    // Lütfen bu değeri kendi dağıtım URL'nizle güncelleyin.
+    const API_BASE_URL = "http://127.0.0.1:5000"; 
+
     const sections = {
       heatmap: document.getElementById('heatmap'),
       charts: document.getElementById('charts'),
@@ -164,6 +200,11 @@
       list: document.getElementById('btn-list')
     };
 
+    // Chart zaman aralığı seçenekleri için yeni element
+    const chartTimeOptionsEl = document.getElementById('chart-time-options');
+    // Mevcut aktif chart coini tutmak için bir değişken
+    let currentChartCoin = null;
+
     function switchTab(name) {
       Object.keys(sections).forEach(k => sections[k].classList.remove('active'));
       Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
@@ -173,12 +214,41 @@
     }
 
     buttons.heatmap.addEventListener('click', () => switchTab('heatmap'));
-    buttons.charts.addEventListener('click', () => switchTab('charts'));
+    buttons.charts.addEventListener('click', () => {
+        switchTab('charts');
+        // Eğer bir coin seçiliyse, Chart sekmesine geçildiğinde mevcut grafiği tekrar yükle
+        if (currentChartCoin) {
+            renderChart(currentChartCoin, '7'); // Varsayılan olarak 7 gün
+        }
+    });
     buttons.list.addEventListener('click', () => switchTab('list'));
 
     const heatmapEl = document.getElementById('heatmap');
     const listEl = document.getElementById('coin-list');
     const chartEl = document.getElementById('chart-container');
+
+    // Chart zaman aralığı butonlarını oluşturma ve olay dinleyicilerini ekleme
+    const chartDaysOptions = ['1', '7', '14', '30', '90', '180', '365', 'max'];
+    chartDaysOptions.forEach(days => {
+        const button = document.createElement('button');
+        button.textContent = days === 'max' ? 'Max' : `${days}D`;
+        button.dataset.days = days;
+        if (days === '7') { // Varsayılan olarak 7D aktif olsun
+            button.classList.add('active');
+        }
+        button.addEventListener('click', () => {
+            // Tüm butonlardaki active sınıfını kaldır
+            Array.from(chartTimeOptionsEl.children).forEach(btn => btn.classList.remove('active'));
+            // Tıklanan butona active sınıfını ekle
+            button.classList.add('active');
+            // Eğer bir coin seçiliyse, yeni zaman aralığıyla grafiği tekrar yükle
+            if (currentChartCoin) {
+                renderChart(currentChartCoin, days);
+            }
+        });
+        chartTimeOptionsEl.appendChild(button);
+    });
+
 
     async function fetchMarketData() {
       try {
@@ -201,7 +271,7 @@
       heatmapEl.innerHTML = '';
       data.forEach(coin => {
         const change = coin.price_change_percentage_24h || 0;
-        const opacity = Math.min(Math.abs(change) / 10, 1);
+        const opacity = Math.min(Math.abs(change) / 5, 1); 
         const bg = change >= 0 ? `rgba(76,175,80,${opacity})` : `rgba(239,83,80,${opacity})`;
         
         const el = document.createElement('div');
@@ -213,8 +283,9 @@
           <div class="price-change ${change >= 0 ? 'positive' : 'negative'}">${change.toFixed(2)}%</div>
         `;
         el.onclick = () => {
+          currentChartCoin = coin; // Seçilen coini kaydet
           switchTab('charts');
-          renderChart(coin);
+          renderChart(coin, '7'); // Heatmap'ten tıklayınca varsayılan 7 gün
         };
         heatmapEl.appendChild(el);
       });
@@ -231,19 +302,27 @@
           <td class="price-change ${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">${coin.price_change_percentage_24h.toFixed(2)}%</td>
         `;
         row.onclick = () => {
+          currentChartCoin = coin; // Seçilen coini kaydet
           switchTab('charts');
-          renderChart(coin);
+          renderChart(coin, '7'); // Listeden tıklayınca varsayılan 7 gün
         };
         listEl.appendChild(row);
       });
     }
 
-    async function renderChart(coin) {
+    // `days` parametresi eklendi
+    async function renderChart(coin, days) {
       chartEl.innerHTML = '<p style="text-align:center;">Loading chart...</p>';
       try {
-        const res = await fetch(`/coin_data/${coin.id}`);
+        // API_BASE_URL kullanarak tam URL oluşturuldu
+        const res = await fetch(`${API_BASE_URL}/coin_chart/${coin.id}/${days}`); 
         if (!res.ok) {
-            throw new Error(`Failed to fetch chart data: ${res.statusText}`);
+            // Hata durumunda daha spesifik mesajlar
+            if (res.status === 429) {
+                throw new Error("CoinGecko API hız limiti aşıldı. Lütfen bir süre sonra tekrar deneyin.");
+            } else {
+                throw new Error(`Failed to fetch chart data: ${res.statusText} (Status: ${res.status})`);
+            }
         }
         const data = await res.json();
         if (data.error) {
@@ -256,7 +335,7 @@
           `;
         }
       } catch (err) {
-        chartEl.innerHTML = '<p style="color:red; text-align:center;">Failed to load chart. Ensure backend server is running.</p>';
+        chartEl.innerHTML = `<p style="color:red; text-align:center;">${err.message || 'Failed to load chart. Ensure backend server is running.'}</p>`;
         console.error("Chart loading error:", err);
       }
     }

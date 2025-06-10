@@ -42,7 +42,7 @@ def fetch_data_from_api(url, cache_key=None):
     print(f"API'den çekiliyor: {url}")
     try:
         # API hız limitine takılmamak için 3 saniye bekleme eklendi
-        time.sleep(2) 
+        time.sleep() 
         response = requests.get(url, timeout=15)
         response.raise_for_status() # HTTP hatalarını (4xx veya 5xx) yakala
         data = response.json()

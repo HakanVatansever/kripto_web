@@ -1,13 +1,13 @@
 # Gerekli kütüphaneleri içe aktarma
-from flask import Flask, render_template, jsonify, request # request modülünü ekledik
-from flask_cors import CORS # CORS (Çapraz Kaynak Paylaşımı) için
-import requests # HTTP istekleri yapmak için
-import matplotlib.pyplot as plt # Grafik çizmek için
-import base64 # Grafikleri Base64 formatına dönüştürmek için
-from io import BytesIO # Bellekte resim verisi tutmak için
-import datetime # Zaman damgalarını işlemek için
+from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
+import requests
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
+import datetime
 import time # İstekler arasına gecikme koymak için
-import json # JSON verilerini işlemek için
+import json
 
 # Flask uygulamasını başlatma
 app = Flask(__name__)
@@ -41,7 +41,8 @@ def fetch_data_from_api(url, cache_key=None):
 
     print(f"API'den çekiliyor: {url}")
     try:
-        # İstek zaman aşımı (timeout) ekledik
+        # API hız limitine takılmamak için 3 saniye bekleme eklendi
+        time.sleep(2) 
         response = requests.get(url, timeout=15)
         response.raise_for_status() # HTTP hatalarını (4xx veya 5xx) yakala
         data = response.json()
@@ -248,6 +249,7 @@ def get_coin_market_cap_chart(coin_id, days):
 
     cache_key = f'market_cap_chart_{coin_id}_{days}'
     try:
+        # Hata düzeltildi: COINGECKO_BASE_BASE_URL -> COINGECKO_BASE_URL
         url = f"{COINGECKO_BASE_URL}/coins/{coin_id}/market_chart?vs_currency=usd&days={days}"
         market_data = fetch_data_from_api(url, cache_key)
         
